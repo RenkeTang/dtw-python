@@ -156,10 +156,7 @@ When ``offset`` is set values on the left axis only apply to the query.
             xts = d.query
             yts = d.reference
         except:
-            raise ValueError("Original timeseries are required")
-
-    # ytso = yts + offset
-    offset = -offset
+            raise ValueError("Original timeseries are required")  
 
     maxlen = max(len(xts), len(yts))
     times = numpy.arange(maxlen)
@@ -178,30 +175,42 @@ When ``offset`` is set values on the left axis only apply to the query.
     
     ax.plot(times, xts, color='k', **kwargs)
     ax2.plot(times, yts, **kwargs)
-
+    
+    offset = -offset
+    
     ql, qh = ax.get_ylim()
     rl, rh = ax2.get_ylim()
 
     if offset > 0:
-        ax.set_ylim(ql - offset, qh)
-        ax2.set_ylim(rl, rh + offset)
+        ql = ql - offset
+        rh = rh + offset
     elif offset < 0:
-        ax.set_ylim(ql, qh - offset)
-        ax2.set_ylim(rl + offset, rh)
+        qh = qh - offset
+        rl = rl + offset
+        
+    ax.set_ylim(ql, qh)
+    ax2.set_ylim(rl, rh)
+    
+    q_rng=qh-ql
+    r_rng=rh-rl
 
     # https://stackoverflow.com/questions/21352580/matplotlib-plotting-numerous-disconnected-line-segments-with-different-colors
     if match_indices is None:
-        idx = numpy.linspace(0, len(d.index1) - 1)
+        idx = np.linspace(0, len(d.index1) - 1)
     elif not hasattr(match_indices, "__len__"):
-        idx = numpy.linspace(0, len(d.index1) - 1, num=match_indices)
+        idx = np.linspace(0, len(d.index1) - 1, num=match_indices)
     else:
         idx = match_indices
-    idx = numpy.array(idx).astype(int)
-
+    idx = np.array(idx).astype(int)
+    
+    print(len(d.index2))
     col = []
+    i =0
+    
     for i in idx:
-        col.append([(d.index1[i], xts[d.index1[i]]),
-                    (d.index2[i], -offset + yts[d.index2[i]])])
+        yset = (yts[d.index2[i]]-rl)/r_rng * q_rng + ql
+        col.append([(d.index1[i], xts[d.index1[i]]), (d.index2[i], yset)])
+        
 
     lc = mc.LineCollection(col, linewidths=1, linestyles=":", colors=match_col)
     ax.add_collection(lc)
