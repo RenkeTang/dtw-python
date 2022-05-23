@@ -19,49 +19,53 @@
 
 """DTW plotting functions"""
 
-import numpy
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib import collections as mc
+import matplotlib.gridspec as gridspec
+import statistics
 
 def dtwPlot(x, type, **kwargs):
     # IMPORT_RDOCSTRING plot.dtw
     """Plotting of dynamic time warp results
 
-Methods for plotting dynamic time warp alignment objects returned by
-[dtw()].
-
-**Details**
-
-``dtwPlot`` displays alignment contained in ``dtw`` objects.
-
-Various plotting styles are available, passing strings to the ``type``
-argument (may be abbreviated):
-
--  ``alignment`` plots the warping curve in ``d``;
--  ``twoway`` plots a point-by-point comparison, with matching lines;
-   see [dtwPlotTwoWay()];
--  ``threeway`` vis-a-vis inspection of the timeseries and their warping
-   curve; see [dtwPlotThreeWay()];
--  ``density`` displays the cumulative cost landscape with the warping
-   path overimposed; see [dtwPlotDensity()]
-
-Additional parameters are passed to the plotting functions: use with
-care.
-
-Parameters
-----------
-x,d : 
-    `dtw` object, usually result of call to [dtw()]
-xlab : 
-    label for the query axis
-ylab : 
-    label for the reference axis
-type : 
-    general style for the plot, see below
-plot_type : 
-    type of line to be drawn, used as the `type` argument in the underlying `plot` call
-... : 
-    additional arguments, passed to plotting functions
-
-"""
+    Methods for plotting dynamic time warp alignment objects returned by [dtw()].
+    
+    **Details**
+    
+    ``dtwPlot`` displays alignment contained in ``dtw`` objects.
+    
+    Various plotting styles are available, passing strings to the ``type``
+    argument (may be abbreviated):
+    
+    -  ``alignment`` plots the warping curve in ``d``;
+    -  ``twoway`` plots a point-by-point comparison, with matching lines;
+       see [dtwPlotTwoWay()];
+    -  ``threeway`` vis-a-vis inspection of the timeseries and their warping
+       curve; see [dtwPlotThreeWay()];
+    -  ``density`` displays the cumulative cost landscape with the warping
+       path overimposed; see [dtwPlotDensity()]
+    
+    Additional parameters are passed to the plotting functions: use with
+    care.
+    
+    Parameters
+    ----------
+    x,d : 
+        `dtw` object, usually result of call to [dtw()]
+    xlab : 
+        label for the query axis
+    ylab : 
+        label for the reference axis
+    type : 
+        general style for the plot, see below
+    plot_type : 
+        type of line to be drawn, used as the `type` argument in the underlying `plot` call
+    ... : 
+        additional arguments, passed to plotting functions
+    
+    """
     # ENDIMPORT
 
     if type == "alignment":
@@ -75,7 +79,7 @@ plot_type :
 
 
 def dtwPlotAlignment(d, xlab="Query index", ylab="Reference index", **kwargs):
-    import matplotlib.pyplot as plt
+
     fig, ax = plt.subplots(figsize=(6, 6))
 
     ax.plot(d.index1, d.index2, **kwargs)
@@ -86,101 +90,102 @@ def dtwPlotAlignment(d, xlab="Query index", ylab="Reference index", **kwargs):
     return ax
 
 
-def dtwPlotTwoWay(d, xts=None, yts=None,
-                  offset=0,
-                  ts_type="l",
-                  match_indices=None,
-                  match_col="gray",
-                  xlab="Index",
-                  ylab="Query value",
-                  **kwargs):
+def dtwPlotTwoWay(
+    d,
+    xts=None,
+    yts=None,
+    offset=0,
+    ts_type="l",
+    match_indices=None,
+    match_col="gray",
+    xlab="Index",
+    ylab="Query value",
+    **kwargs
+):
     # IMPORT_RDOCSTRING dtwPlotTwoWay
     """Plotting of dynamic time warp results: pointwise comparison
 
-Display the query and reference time series and their alignment,
-arranged for visual inspection.
-
-**Details**
-
-The two vectors are displayed via the [matplot()] functions; their
-appearance can be customized via the ``type`` and ``pch`` arguments
-(constants or vectors of two elements). If ``offset`` is set, the
-reference is shifted vertically by the given amount; this will be
-reflected by the *right-hand* axis.
-
-Argument ``match_indices`` is used to draw a visual guide to matches; if
-a vector is given, guides are drawn for the corresponding indices in the
-warping curve (match lines). If integer, it is used as the number of
-guides to be plotted. The corresponding style is customized via the
-``match_col`` and ``match_lty`` arguments.
-
-If ``xts`` and ``yts`` are not supplied, they will be recovered from
-``d``, as long as it was created with the two-argument call of [dtw()]
-with ``keep_internals=True``. Only single-variate time series can be
-plotted this way.
-
-Parameters
-----------
-d : 
-    an alignment result, object of class `dtw`
-xts : 
-    query vector
-yts : 
-    reference vector
-xlab,ylab : 
-    axis labels
-offset : 
-    displacement between the timeseries, summed to reference
-match_col,match_lty : 
-    color and line type of the match guide lines
-match_indices : 
-    indices for which to draw a visual guide
-ts_type,pch : 
-    graphical parameters for timeseries plotting, passed to `matplot`
-... : 
-    additional arguments, passed to `matplot`
-
-Notes
------
-
-When ``offset`` is set values on the left axis only apply to the query.
-
-"""
-    # ENDIMPORT
-
-    import matplotlib.pyplot as plt
-    from matplotlib import collections  as mc
+    Display the query and reference time series and their alignment,
+    arranged for visual inspection.
+    
+    **Details**
+    
+    The two vectors are displayed via the [matplot()] functions; their
+    appearance can be customized via the ``type`` and ``pch`` arguments
+    (constants or vectors of two elements). If ``offset`` is set, the
+    reference is shifted vertically by the given amount; this will be
+    reflected by the *right-hand* axis.
+    
+    Argument ``match_indices`` is used to draw a visual guide to matches; if
+    a vector is given, guides are drawn for the corresponding indices in the
+    warping curve (match lines). If integer, it is used as the number of
+    guides to be plotted. The corresponding style is customized via the
+    ``match_col`` and ``match_lty`` arguments.
+    
+    If ``xts`` and ``yts`` are not supplied, they will be recovered from
+    ``d``, as long as it was created with the two-argument call of [dtw()]
+    with ``keep_internals=True``. Only single-variate time series can be
+    plotted this way.
+    
+    Parameters
+    ----------
+    d : 
+        an alignment result, object of class `dtw`
+    xts : 
+        query vector
+    yts : 
+        reference vector
+    xlab,ylab : 
+        axis labels
+    offset : 
+        displacement between the timeseries, summed to reference
+    match_col,match_lty : 
+        color and line type of the match guide lines
+    match_indices : 
+        indices for which to draw a visual guide
+    ts_type,pch : 
+        graphical parameters for timeseries plotting, passed to `matplot`
+    ... : 
+        additional arguments, passed to `matplot`
+    
+    Notes
+    -----
+    
+    When ``offset`` is set values on the left axis only apply to the query.
+    
+    """
+    # ENDIMPORT    
 
     if xts is None or yts is None:
         try:
             xts = d.query
             yts = d.reference
         except:
-            raise ValueError("Original timeseries are required")  
+            raise ValueError("Original timeseries are required")
+            
+    
 
     maxlen = max(len(xts), len(yts))
-    times = numpy.arange(maxlen)
-    xts = numpy.pad(xts,(0,maxlen-len(xts)),"constant",constant_values=numpy.nan)
-    yts = numpy.pad(yts,(0,maxlen-len(yts)),"constant",constant_values=numpy.nan)
-
-    fig, ax = plt.subplots()
+    times = np.arange(maxlen)
+    xts = np.pad(xts, (0, maxlen - len(xts)), "constant", constant_values=np.nan)
+    yts = np.pad(yts, (0, maxlen - len(yts)), "constant", constant_values=np.nan)
+    
+    fig, ax = plt.subplots(figsize=(12,6))
     if offset != 0:
         ax2 = ax.twinx()
-        ax2.tick_params('y', colors='b')
+        ax2.tick_params("y", colors="b")
     else:
         ax2 = ax
     
-    ax.set_xlabel(xlab)
-    ax.set_ylabel(ylab)
     
-    ax.plot(times, xts, color='k', **kwargs)
+    ax.plot(times, xts, color="k", **kwargs)
     ax2.plot(times, yts, **kwargs)
+
+    ql, qh = ax.get_ylim()
+    rl, rh = ax2.get_ylim()
     
     offset = -offset
     
-    ql, qh = ax.get_ylim()
-    rl, rh = ax2.get_ylim()
-
     if offset > 0:
         ql = ql - offset
         rh = rh + offset
@@ -194,7 +199,8 @@ When ``offset`` is set values on the left axis only apply to the query.
     q_rng=qh-ql
     r_rng=rh-rl
 
-    # https://stackoverflow.com/questions/21352580/matplotlib-plotting-numerous-disconnected-line-segments-with-different-colors
+    # https://stackoverflow.com/questions/21352580/
+    # matplotlib-plotting-numerous-disconnected-line-segments-with-different-colors
     if match_indices is None:
         idx = np.linspace(0, len(d.index1) - 1)
     elif not hasattr(match_indices, "__len__"):
@@ -203,87 +209,100 @@ When ``offset`` is set values on the left axis only apply to the query.
         idx = match_indices
     idx = np.array(idx).astype(int)
     
-    print(len(d.index2))
+    # calculate the time early 
+    if len(xts) ==len(yts):
+        time_early=pd.DataFrame()
+        time_early['query']=d.index1
+        time_early['reference']=d.index2
+        time_early['early'] =  d.index2 - d.index1
+        
+        print('the covarince is: %.6f' %statistics.variance(time_early['early']))
+        print('the standard deviation is: %.6f' %np.std(time_early['early']))
+        print(time_early['early'].describe())
+        
+        # time_early.to_excel('query_refrency.xlsx')
+        
     col = []
     i =0
-    
     for i in idx:
-        yset = (yts[d.index2[i]]-rl)/r_rng * q_rng + ql
-        col.append([(d.index1[i], xts[d.index1[i]]), (d.index2[i], yset)])
-        
+        yh = (yts[d.index2[i]]-rl)/r_rng * q_rng + ql
+        col.append([(d.index1[i], xts[d.index1[i]]), (d.index2[i], yh)])
 
     lc = mc.LineCollection(col, linewidths=1, linestyles=":", colors=match_col)
     ax.add_collection(lc)
 
+    plt.savefig('twoWay.png')
     plt.show()
-    return ax
 
 
-def dtwPlotThreeWay(d, xts=None, yts=None,
-                    match_indices=None,
-                    match_col="gray",
-                    xlab="Query index",
-                    ylab="Reference index", **kwargs):
+def dtwPlotThreeWay(
+    d,
+    xts=None,
+    yts=None,
+    match_indices=None,
+    match_col="gray",
+    xlab="Query index",
+    ylab="Reference index",
+    **kwargs
+):
     # IMPORT_RDOCSTRING dtwPlotThreeWay
     """Plotting of dynamic time warp results: annotated warping function
 
-Display the query and reference time series and their warping curve,
-arranged for visual inspection.
-
-**Details**
-
-The query time series is plotted in the bottom panel, with indices
-growing rightwards and values upwards. Reference is in the left panel,
-indices growing upwards and values leftwards. The warping curve panel
-matches indices, and therefore element (1,1) will be at the lower left,
-(N,M) at the upper right.
-
-Argument ``match_indices`` is used to draw a visual guide to matches; if
-a vector is given, guides are drawn for the corresponding indices in the
-warping curve (match lines). If integer, it is used as the number of
-guides to be plotted. The corresponding style is customized via the
-``match_col`` and ``match_lty`` arguments.
-
-If ``xts`` and ``yts`` are not supplied, they will be recovered from
-``d``, as long as it was created with the two-argument call of [dtw()]
-with ``keep_internals=True``. Only single-variate time series can be
-plotted.
-
-Parameters
-----------
-d : 
-    an alignment result, object of class `dtw`
-xts : 
-    query vector
-yts : 
-    reference vector
-xlab : 
-    label for the query axis
-ylab : 
-    label for the reference axis
-main : 
-    main title
-type_align : 
-    line style for warping curve plot
-type_ts : 
-    line style for timeseries plot
-match_indices : 
-    indices for which to draw a visual guide
-margin : 
-    outer figure margin
-inner_margin : 
-    inner figure margin
-title_margin : 
-    space on the top of figure
-... : 
-    additional arguments, used for the warping curve
-
-"""
+    Display the query and reference time series and their warping curve,
+    arranged for visual inspection.
+    
+    **Details**
+    
+    The query time series is plotted in the bottom panel, with indices
+    growing rightwards and values upwards. Reference is in the left panel,
+    indices growing upwards and values leftwards. The warping curve panel
+    matches indices, and therefore element (1,1) will be at the lower left,
+    (N,M) at the upper right.
+    
+    Argument ``match_indices`` is used to draw a visual guide to matches; if
+    a vector is given, guides are drawn for the corresponding indices in the
+    warping curve (match lines). If integer, it is used as the number of
+    guides to be plotted. The corresponding style is customized via the
+    ``match_col`` and ``match_lty`` arguments.
+    
+    If ``xts`` and ``yts`` are not supplied, they will be recovered from
+    ``d``, as long as it was created with the two-argument call of [dtw()]
+    with ``keep_internals=True``. Only single-variate time series can be
+    plotted.
+    
+    Parameters
+    ----------
+    d : 
+        an alignment result, object of class `dtw`
+    xts : 
+        query vector
+    yts : 
+        reference vector
+    xlab : 
+        label for the query axis
+    ylab : 
+        label for the reference axis
+    main : 
+        main title
+    type_align : 
+        line style for warping curve plot
+    type_ts : 
+        line style for timeseries plot
+    match_indices : 
+        indices for which to draw a visual guide
+    margin : 
+        outer figure margin
+    inner_margin : 
+        inner figure margin
+    title_margin : 
+        space on the top of figure
+    ... : 
+        additional arguments, used for the warping curve
+    
+    """
     # ENDIMPORT
-    import matplotlib.pyplot as plt
-    import matplotlib.gridspec as gridspec
-    from matplotlib import collections  as mc
 
+    
     if xts is None or yts is None:
         try:
             xts = d.query
@@ -291,23 +310,16 @@ title_margin :
         except:
             raise ValueError("Original timeseries are required")
 
-    nn = len(xts)
-    mm = len(yts)
-    nn1 = numpy.arange(nn)
-    mm1 = numpy.arange(mm)
-
-    fig = plt.figure()
-    gs = gridspec.GridSpec(2, 2,
-                           width_ratios=[1, 3],
-                           height_ratios=[3, 1])
+    fig = plt.figure(figsize=(12,8))
+    gs = gridspec.GridSpec(2, 2, width_ratios=[1, 3], height_ratios=[3, 1])
     axr = plt.subplot(gs[0])
     ax = plt.subplot(gs[1])
     axq = plt.subplot(gs[3])
 
-    axq.plot(nn1, xts)  # query, horizontal, bottom
+    axq.plot(np.arange(len(xts)), xts)  # query, horizontal, bottom
     axq.set_xlabel(xlab)
 
-    axr.plot(yts, mm1)  # ref, vertical
+    axr.plot(yts, np.arange(len(yts)))  # ref, vertical
     axr.invert_xaxis()
     axr.set_ylabel(ylab)
 
@@ -316,93 +328,93 @@ title_margin :
     if match_indices is None:
         idx = []
     elif not hasattr(match_indices, "__len__"):
-        idx = numpy.linspace(0, len(d.index1) - 1, num=match_indices)
+        idx = np.linspace(0, len(d.index1) - 1, num=match_indices)
     else:
         idx = match_indices
-    idx = numpy.array(idx).astype(int)
+    idx = np.array(idx).astype(int)
 
     col = []
     for i in idx:
-        col.append([(d.index1[i], 0),
-                    (d.index1[i], d.index2[i])])
-        col.append([(0, d.index2[i]),
-                    (d.index1[i], d.index2[i])])
+        col.append([(d.index1[i], 0), (d.index1[i], d.index2[i])])
+        col.append([(0, d.index2[i]), (d.index1[i], d.index2[i])])
 
     lc = mc.LineCollection(col, linewidths=1, linestyles=":", colors=match_col)
     ax.add_collection(lc)
-
+    plt.savefig('threeWay.png')
     plt.show()
-    return ax
 
 
-def dtwPlotDensity(d, normalize=False,
-                   xlab="Query index",
-                   ylab="Reference index", **kwargs):
+
+
+def dtwPlotDensity(
+    d, normalize=False, xlab="Query index", ylab="Reference index", **kwargs
+):
     # IMPORT_RDOCSTRING dtwPlotDensity
     """Display the cumulative cost density with the warping path overimposed
 
-The plot is based on the cumulative cost matrix. It displays the optimal
-alignment as a “ridge” in the global cost landscape.
-
-**Details**
-
-The alignment must have been constructed with the
-``keep_internals=True`` parameter set.
-
-If ``normalize`` is ``True``, the *average* cost per step is plotted
-instead of the cumulative one. Step averaging depends on the
-[stepPattern()] used.
-
-Parameters
-----------
-d : 
-    an alignment result, object of class `dtw`
-normalize : 
-    show per-step average cost instead of cumulative cost
-xlab : 
-    label for the query axis
-ylab : 
-    label for the reference axis
-... : 
-    additional parameters forwarded to plotting functions
-
-Examples
---------
->>> from dtw import *
-
-A study of the "Itakura" parallelogram
-
-A widely held misconception is that the "Itakura parallelogram" (as
-described in the original article) is a global constraint.  Instead,
-it arises from local slope restrictions. Anyway, an "itakuraWindow",
-is provided in this package. A comparison between the two follows.
-
-The local constraint: three sides of the parallelogram are seen
-
->>> (query, reference) = dtw_test_data.sin_cos()
->>> ita = dtw(query, reference, keep_internals=True, step_pattern=typeIIIc)
-
->>> dtwPlotDensity(ita)				     # doctest: +SKIP
-
-Symmetric step with global parallelogram-shaped constraint. Note how
-long (>2 steps) horizontal stretches are allowed within the window.
-
->>> ita = dtw(query, reference, keep_internals=True, window_type=itakuraWindow)
-
->>> dtwPlotDensity(ita)				     # doctest: +SKIP
-
-"""
-    # ENDIMPORT
-    import matplotlib.pyplot as plt
+    The plot is based on the cumulative cost matrix. It displays the optimal
+    alignment as a “ridge” in the global cost landscape.
+    
+    **Details**
+    
+    The alignment must have been constructed with the
+    ``keep_internals=True`` parameter set.
+    
+    If ``normalize`` is ``True``, the *average* cost per step is plotted
+    instead of the cumulative one. Step averaging depends on the
+    [stepPattern()] used.
+    
+    Parameters
+    ----------
+    d : 
+        an alignment result, object of class `dtw`
+    normalize : 
+        show per-step average cost instead of cumulative cost
+    xlab : 
+        label for the query axis
+    ylab : 
+        label for the reference axis
+    ... : 
+        additional parameters forwarded to plotting functions
+    
+    Examples
+    --------
+    >>> from dtw import *
+    
+    A study of the "Itakura" parallelogram
+    
+    A widely held misconception is that the "Itakura parallelogram" (as
+    described in the original article) is a global constraint.  Instead,
+    it arises from local slope restrictions. Anyway, an "itakuraWindow",
+    is provided in this package. A comparison between the two follows.
+    
+    The local constraint: three sides of the parallelogram are seen
+    
+    >>> (query, reference) = dtw_test_data.sin_cos()
+    >>> ita = dtw(query, reference, keep_internals=True, step_pattern=typeIIIc)
+    
+    >>> dtwPlotDensity(ita)				     # doctest: +SKIP
+    
+    Symmetric step with global parallelogram-shaped constraint. Note how
+    long (>2 steps) horizontal stretches are allowed within the window.
+    
+    >>> ita = dtw(query, reference, keep_internals=True, window_type=itakuraWindow)
+    
+    >>> dtwPlotDensity(ita)				     # doctest: +SKIP
+    
+    """
+    # ENDIMPORT    
 
     try:
         cm = d.costMatrix
     except:
-        raise ValueError("dtwPlotDensity requires dtw internals (set keep.internals=True on dtw() call)")
+        raise ValueError(
+            "dtwPlotDensity requires dtw internals (set keep.internals=True on dtw() call)"
+        )
 
     if normalize:
         norm = d.stepPattern.hint
-        row, col = numpy.indices(cm.shape)
+        row, col = np.indices(cm.shape)
         if norm == "NA":
             raise ValueError("Step pattern has no normalization")
         elif norm == "N":
@@ -415,7 +427,7 @@ long (>2 steps) horizontal stretches are allowed within the window.
     fig, ax = plt.subplots(figsize=(6, 6))
 
     ax.imshow(cm.T, origin="lower", cmap=plt.get_cmap("terrain"))
-    co = ax.contour(cm.T, colors="black", linewidths = 1)
+    co = ax.contour(cm.T, colors="black", linewidths=1)
     ax.clabel(co)
 
     ax.plot(d.index1, d.index2, color="blue", linewidth=2)
@@ -424,4 +436,3 @@ long (>2 steps) horizontal stretches are allowed within the window.
     ax.set_ylabel(ylab)
 
     plt.show()
-    return ax
